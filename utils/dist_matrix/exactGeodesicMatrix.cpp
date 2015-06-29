@@ -40,7 +40,9 @@ int main(int argc, char **argv)
 	std::string fileName = fileNameStream.str();	
 	ofstream outputFile;
 	outputFile.open(fileName.c_str());
-	unsigned source_vertex_index = atol(argv[4]);	
+
+
+	unsigned source_vertex_index = atol(argv[4]);	 // input source points
 	geodesic::SurfacePoint source(&mesh.vertices()[source_vertex_index]);
 	std::vector<geodesic::SurfacePoint> all_sources(1,source);
 	algorithm.propagate(all_sources);	
@@ -49,7 +51,7 @@ int main(int argc, char **argv)
 		geodesic::SurfacePoint p(&mesh.vertices()[i]);		
 		double distance;
 		unsigned best_source = algorithm.best_source(p,distance);
-		outputFile << distance << std::endl;			
+		outputFile << distance << std::endl;
 	}
 outputFile.close();
 return 0;
