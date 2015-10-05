@@ -1,4 +1,4 @@
-function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, sub)
+function [dist, zone] = distExactGeodesic(source, surfType, hemi, analysisType, dir, sub)
 % source = source node ids
 % surfType = '32' or '164' or 'freesurfer'
 % hemi = 'L' or 'R'
@@ -18,7 +18,7 @@ switch surfType
         end
         aparc = aparc.cdata;
         noncortex = find(aparc == 0);
-
+    
         % To remove mesh problem
         if hemi == 'R'
             noncortex = sort([noncortex; 27806; 27810; 128; 129; 27779; 27792; 27791; 27798; ...
@@ -36,20 +36,36 @@ switch surfType
             '.L.aparc.a2009s.164k_fs_LR.label.gii']);
         aparc = aparc.cdata;
         noncortex = find(aparc == 0);
+        
+     case 'Native'        
+        filename = [dir sub '/T1w/Native/' sub '.' hemi '.midthickness.native.surf.gii'];
+        surf = gifti(filename);
+        aparc = gifti([dir sub '/MNINonLinear/Native/' sub '.' hemi '.aparc.a2009s.native.label.gii']);
+        aparc = aparc.cdata;
+        noncortex = find(aparc == 0);            
 
     case 'freesurfer'
         filename = sub;
-        surfp = SurfStatReadSurf([sub '/surf/' hemi '.pial']);
-        surfw = SurfStatReadSurf([sub '/surf/' hemi '.smoothwm']);
+        surfp = SurfStatReadSurf([dir sub '/surf/' hemi '.pial']);
+        surfw = SurfStatReadSurf([dir sub '/surf/' hemi '.smoothwm']);
         % find midpoint
         surf.coord = (surfp.coord + surfw.coord) ./ 2;
         surf.faces = surfp.tri;
         surf.vertices = surf.coord';
-        c = read_label(sub,[hemi '.cortex']);
+        c = read_label([dir sub],[hemi '.cortex']);
         cortex = c(:,1) + 1; clear c;
         noncortex = setdiff(1:length(surf.vertices),cortex);
+        
+    case 'freesurfer_pial'
+        filename = sub;
+        surf = SurfStatReadSurf([dir sub '/surf/' hemi '.pial']);        
+        c = read_label([dir sub],[hemi '.cortex']);
+        cortex = c(:,1) + 1; clear c;
+        noncortex = setdiff(1:length(surf.coord),cortex);
+        surf.faces = surf.tri;
+        surf.vertices = surf.coord';
 end
-
+    
 index1 = ismember(surf.faces(:,1),noncortex);
 index2 = ismember(surf.faces(:,2),noncortex);
 index3 = ismember(surf.faces(:,3),noncortex);
